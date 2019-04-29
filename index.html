@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+  <link rel="stylesheet" href="css/buttons.css">
+  <link rel="stylesheet" href="css/textbox.css">
+  <script src="https://apis.google.com/js/api.js"></script>
+
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
+  <style>
+    body {
+      overflow-y: hidden;
+      overflow-x: hidden;
+      font-family: 'Roboto', sans-serif;
+
+    }
+    .center {
+      margin: auto;
+      width: 60%;
+      border: 0.1px solid #A0A0A0;
+      box-shadow: 0.5px 0.5px;
+      padding: 10px;
+      background-color: white;
+
+    }
+
+    .circle {
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+<script type="text/javascript">
+  "use strict"
+  let windowHeight = window.innerHeight
+  let windowWidth = window.innerWidth
+  let key = 'AIzaSyBedycStTcP-HDGlwe9z9BDi6qTIiacCsc'
+  let spreadSheetId = '1XfAjDVinp78peRKmO-qqvMqTQx9T5o2nKamay1VMsvo'
+
+
+  let url = buildUrl('A1', 'G4')
+  let urlForMenu = buildUrl('A5', 'G5')
+
+  function buildUrl(range1, range2) {
+  	return'https://sheets.googleapis.com/v4/spreadsheets/' + spreadSheetId +'/values:batchGet?dateTimeRenderOption=FORMATTED_STRING&majorDimension=COLUMNS&ranges='+ range1 + '%3A'+ range2 +'&valueRenderOption=FORMATTED_VALUE&key='+ key +''
+  }
+  let positionsArray = []
+
+  async function runApiCall(url) {
+    let response = await fetch(`${url}`);
+    let data = await response.json()    
+    return data;
+  }
+
+  runApiCall(url)
+    .then(data => buildUI(data));
+
+  runApiCall(urlForMenu)
+  	.then(data => buildMenu(data));
+
+  let randomize = {
+    positionX: function () {
+      let calculatedNumber
+      calculatedNumber = Math.floor((Math.random() * (windowWidth - 300)) + 200);
+      while(calculatedNumber < 200) {
+        calculatedNumber = Math.floor((Math.random() * (windowWidth - 300)) + 1);
+      }
+      return calculatedNumber
+    },
+
+    positionY: function () {
+      let calculatedNumber = Math.floor((Math.random() * (windowHeight  - 50)) + 1);
+      return calculatedNumber
+    },
+
+    fontSize: function ()   {
+      let calculatedNumber;
+      calculatedNumber = Math.floor((Math.random() * 33) + 12);
+      while(calculatedNumber > 33) {
+        calculatedNumber = Math.floor((Math.random() * 33) + 12);
+      }
+      return calculatedNumber
+    }
+  }
+
+  function processTextForSpaces(text) {
+    let str
+    str = text.replace(/\s/g,'')
+    str = str.toLowerCase();
+
+    return str
+  }
+
+  function createButton(id, string, fontSize, cls) {
+  	if (string != "LinkedIn") {
+  		$("body").append('<div id="'+ id +'" style="display:inline-block; position: absolute;"><a href="#" class="'+ cls +'" style="font-size:'+ fontSize +'px">'+ string +'</a><div>');	
+  	} else {
+  		$("body").append('<div id="'+ id +'" style="display:inline-block; position: absolute;"><a href="https://www.linkedin.com/in/arthur-bazso/" target="_blank" class="'+ cls +'" style="font-size:'+ fontSize +'px">'+ string +'</a><div>');	
+  	}
+    
+  }
+
+
+  function buildUI(data) {
+    for (let i = 0; i < data.valueRanges[0].values.length; i++) {
+      for (let j = 0; j < data.valueRanges[0].values[i].length; j++) {
+        let positionY
+        let positionX
+        positionY = randomize.positionY()
+        positionX = randomize.positionX()
+
+        let fontSize = randomize.fontSize()
+        let thisElementText = data.valueRanges[0].values[i][j]
+        let thisElementId = processTextForSpaces(data.valueRanges[0].values[i][j])
+
+        createButton(thisElementId, thisElementText, fontSize, "button")
+        setElementPosition(thisElementId, positionX, positionY)
+        for (let k = 0; k < positionsArray.length; k++) {
+          while (checkCollision(positionsArray[k], thisElementId) == true) {
+            positionX = randomize.positionX();
+            positionY = randomize.positionY();
+            setElementPosition(thisElementId, positionX, positionY)
+          }
+        }
+
+        pushToArray(thisElementId)
+      }
+    }
+  }
+
+  function checkCollision(idOne,idTwo){
+          let objOne=$("#" + idOne),
+              objTwo=$("#" + idTwo),
+              offsetOne = objOne.offset(),
+              offsetTwo = objTwo.offset(),
+              topOne= offsetOne.top,
+              topTwo= offsetTwo.top,
+              leftOne= offsetOne.left,
+              leftTwo= offsetTwo.left,
+              widthOne = objOne.width(),
+              widthTwo = objTwo.width(),
+              heightOne = objOne.height(),
+              heightTwo = objTwo.height();
+          let leftTop = leftTwo > leftOne && leftTwo < leftOne+widthOne                  && topTwo > topOne && topTwo < topOne+heightOne,             rightTop = leftTwo+widthTwo > leftOne && leftTwo+widthTwo < leftOne+widthOne                  && topTwo > topOne && topTwo < topOne+heightOne,             leftBottom = leftTwo > leftOne && leftTwo < leftOne+widthOne                  && topTwo+heightTwo > topOne && topTwo+heightTwo < topOne+heightOne,             rightBottom = leftTwo+widthTwo > leftOne && leftTwo+widthTwo < leftOne+widthOne                  && topTwo+heightTwo > topOne && topTwo+heightTwo < topOne+heightOne;
+          return leftTop || rightTop || leftBottom || rightBottom;
+  }
+
+  function buildMenu(data) {
+  	
+  	let whyMakeThis = data.valueRanges[0].values[0][0]
+  	let aboutMe = data.valueRanges[0].values[1][0]
+
+    createCircle("circleWhy")
+    setElementPosition("circleWhy", 10, 150)
+   	createButton("btnWhy", "Why make this?", 20, "buttonMenu")
+    setElementPosition("btnWhy", 35, 150)
+
+    createCircle("circleAboutMe")
+    setElementPosition("circleAboutMe", 10, 190)
+   	createButton("btnAboutMeShort", "About me - short", 20, "buttonMenu")
+    setElementPosition("btnAboutMeShort", 35, 190)
+
+    createCircle("circleLinkedin")
+    setElementPosition("circleLinkedin", 10, 230)
+   	createButton("btnLinkedin", "LinkedIn", 20, "buttonMenu")
+    setElementPosition("btnLinkedin", 35, 230)
+
+    createTextBox("textBoxWhy", whyMakeThis)
+    setElementPosition("textBoxWhy", 235, 147)
+    setZ('textBoxWhy', 1)
+    createTextBox("textBoxAboutMe", aboutMe)
+    setElementPosition("textBoxAboutMe", 235, 147)
+    setZ('textBoxAboutMe', 1)
+    hideTextBoxes()
+
+    setMouseOver('btnWhy', 'textBoxWhy', 'textBoxAboutMe')
+    setMouseOut('btnWhy')    
+    setMouseOver('btnAboutMeShort', 'textBoxAboutMe', 'textBoxWhy')
+    setMouseOut('btnAboutMeShort')
+  }
+
+  function setMouseOver(id, idToShow, idToHide) {
+  	$("#" + id).mouseover(function(){
+  		$('#' + idToHide).hide()
+  		$('#' + idToShow).show()
+	});
+  }
+
+  function setMouseOut(id) {
+  	$("#" + id).mouseout(function(){
+  		hideTextBoxes()
+	});  	
+  }
+
+  function hideTextBoxes() {
+  	$('#textBoxWhy').hide()
+  	$('#textBoxAboutMe').hide()
+  }
+
+  function showElement(elementIdToShow, elementIdToHide) {  	
+  	$('#' + elementIdToHide).hide()	
+  	$('#' + elementIdToShow).show()	
+  }
+
+  function createTextBox(id, text) {  	
+  	let textBox = '<div id="' + id + '" class="textbox" style="position:absolute">' + text + '</div>'
+  	$("body").append(textBox)
+  }
+
+  function setZ(id, number) {
+  	$('#' + id).css({'z-index' : number})
+  }
+
+  function createCircle(id) {
+    let html = '<div id=' + id + ' style="height: 15px;width: 15px; border-radius:50%; border-style:solid; border-color: rgba(30, 22, 54, 0.6)"></div>'
+    $("body").append(html)
+  }
+
+  function buildCircleElement(id, string, fontSize) {
+    $("body").append('<div id="'+ id +'" class="circle" style="display:inline-block; position: absolute;"><div>');
+  }
+
+  function getElementWidth(element) {
+    return $('#'+ element +'').width()
+  }
+
+  function getElementHeight(element) {
+    return $('#'+ element +'').height()
+  }
+
+  function setElementPosition(id, positionX, positionY) {
+    $('#' + id + '').offset({top: positionY , left: positionX})
+  }
+
+  function pushToArray(elementId) {
+    positionsArray.push(elementId)
+  }
+
+</script>
+
+</body>
+</html>
